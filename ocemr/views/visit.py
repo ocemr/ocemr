@@ -61,6 +61,80 @@ def visit(request, id):
 
 
 @login_required
+def visit_edit_type(request, id):
+    """
+    Show popup to edit visit type
+    """
+    from ocemr.models import Visit
+    from ocemr.forms import EditVisitTypeForm
+
+    v = Visit.objects.get(pk=id)
+
+    if not v.can_modify_visit_type():
+        return render(
+            request,
+            "popup_info.html",
+            {
+                "title": "Set Visit Type",
+                "info": "Cannot Set Visit Type",
+            },
+        )
+
+    if request.method == "POST":
+        form = EditVisitTypeForm(request.POST)
+        if form.is_valid():
+            v.type = form.cleaned_data["visit_type"]
+            v.save()
+            return HttpResponseRedirect("/close_window/")
+    else:
+        form = EditVisitTypeForm(initial={"visit_type": v.type})
+    return render(
+        request,
+        "popup_form.html",
+        {
+            "title": "Edit Visit Type",
+            "form_action": "/visit/%s/edit_type/" % (id),
+            "form": form,
+        },
+    )
+
+
+@login_required
+def visit_set_type(request, id, new_type):
+    """
+    Set Visit type from url
+    """
+    from ocemr.models import Visit
+
+    v = Visit.objects.get(pk=id)
+
+    if not v.can_modify_visit_type():
+        return render(
+            request,
+            "popup_info.html",
+            {
+                "title": "Set Visit Type",
+                "info": "Cannot Set Visit Type",
+            },
+        )
+
+    for (type_id, type_name) in Visit.VISIT_TYPE_CHOICES:
+        if type_id == new_type:
+            v.type = new_type
+            v.save()
+            return HttpResponseRedirect("/close_window/")
+
+    return render(
+        request,
+        "popup_info.html",
+        {
+            "title": "Set Visit Type",
+            "info": "Cannot Set Unknown Visit Type",
+        },
+    )
+
+
+@login_required
 def visit_claim(request, id):
     """ """
     from ocemr.models import Visit, Diagnosis
