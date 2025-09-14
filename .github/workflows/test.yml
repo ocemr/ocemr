@@ -6,11 +6,15 @@ jobs:
   test:
 
     runs-on: ubuntu-latest
-    container:
-      image: debian:buster-slim
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v5
+
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '2.7'
+
+    - run: pip install -r requirements.txt
 
     - name: cp DIST files
       run: |
