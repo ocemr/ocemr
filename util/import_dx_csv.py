@@ -56,9 +56,12 @@ for row in reader:
     if row[2] == "":
         continue
     icpc2Code = row[0]
-    title = row[2]
+    title = row[1]
+    active = row[2]
     print "[%s:%s] " % (icpc2Code, title),
-    dt, is_new = DiagnosisType.objects.get_or_create(icpc2Code=icpc2Code, title=title)
+    dt, is_new = DiagnosisType.objects.get_or_create(
+        icpc2Code=icpc2Code, title=title, active=active
+    )
     if is_new:
         print "{NEW} ",
         dt.save()
