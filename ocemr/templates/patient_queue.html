@@ -15,6 +15,13 @@
 {% endblock %}
 
 {% block content %}
+<DIV ID=extraHeader>
+Filter by visit type:
+{% ifnotequal filter_visit_type None %}<A HREF=/patient_queue/>All</A>{%else%}ALL{%endifnotequal%} /
+{% ifnotequal filter_visit_type "OUT" %}<A HREF=/patient_queue/?filter_visit_type=OUT>Outpatient</A>{%else%}Outpatient{%endifnotequal%} /
+{% ifnotequal filter_visit_type "IN" %}<A HREF=/patient_queue/?filter_visit_type=IN>Inpatient</A>{%else%}Inpatient{%endifnotequal%} /
+{% ifnotequal filter_visit_type "MAT" %}<A HREF=/patient_queue/?filter_visit_type=MAT>Maternity</A>{%else%}Maternity{%endifnotequal%}
+</DIV>
 <DIV STYLE="font-size: 1.2em; text-align: center;">
 <FORM ACTION="/select_date_for_patient_queue/" METHOD="POST">
 (
@@ -36,11 +43,12 @@
 {% if visits %}
 <DIV STYLE="font-size: 1.2em;">Active({{num_active}}):</DIV>
 <TABLE>
-<TR><TH>Seen</TH><TH>Patient Id</TH><TH>Status</TH><TH>Claimed</TH><TH>Labs</TH><TH>Actions</TH></TR>
+<TR><TH>Seen</TH><TH>Patient Id</TH>{% ifequal filter_visit_type None %}<TH>Type</TH>{%endifequal%}<TH>Status</TH><TH>Claimed</TH><TH>Labs</TH><TH>Actions</TH></TR>
 {% for v in visits %}
 <TR>
 <TD>{{v.seenDateTime|date:"SHORT_DATETIME_FORMAT"}}</TD>
 <TD><A HREF=/patient/{{v.patient.id}}/>{{ v.patient }}</A></TD>
+{% ifequal filter_visit_type None %}<TD>{{v.displayType}}</TD>{%endifequal%}
 	{% ifequal v.status "MISS" %}
 		<TD STYLE='background-color:#FF5555;'>
 	{% else %} {% ifequal v.status "INPR" %}
@@ -78,6 +86,22 @@
 	| <A HREF=# onClick='window.open("/visit/{{v.id}}/claim/","Claim Patient","menubar=no,width=540,height=420,toolbar=no,scrollbars=yes");'>Claim</A>
 	| <A HREF=# onClick='window.open("/visit/{{v.id}}/unseen/","Patient Missed","menubar=no,width=540,height=420,toolbar=no,scrollbars=yes");'>Undo-Seen</A>
 {%endif%}
+{% if v.can_modify_visit_type %}
+	{% ifequal v.type "OUT" %}
+		| <A HREF=# onClick='window.open("/visit/{{v.id}}/set_type/IN","Set Inpatient","menubar=no,width=540,height=420,toolbar=no,scrollbars=yes");'>Set-Inpatient</A>
+		| <A HREF=# onClick='window.open("/visit/{{v.id}}/set_type/MAT","Set Maternity","menubar=no,width=540,height=420,toolbar=no,scrollbars=yes");'>Set-Maternity</A>
+	{%else%}
+	{% ifequal v.type "IN" %}
+		| <A HREF=# onClick='window.open("/visit/{{v.id}}/set_type/OUT","Set Outpatient","menubar=no,width=540,height=420,toolbar=no,scrollbars=yes");'>Set-Outpatient</A>
+		| <A HREF=# onClick='window.open("/visit/{{v.id}}/set_type/MAT","Set Maternity","menubar=no,width=540,height=420,toolbar=no,scrollbars=yes");'>Set-Maternity</A>
+	{%else%}
+	{% ifequal v.type "MAT" %}
+		| <A HREF=# onClick='window.open("/visit/{{v.id}}/set_type/IN","Set Inpatient","menubar=no,width=540,height=420,toolbar=no,scrollbars=yes");'>Set-Inpatient</A>
+		| <A HREF=# onClick='window.open("/visit/{{v.id}}/set_type/OUT","Set Outpatient","menubar=no,width=540,height=420,toolbar=no,scrollbars=yes");'>Set-Outpatient</A>
+	{%endifequal%}
+	{%endifequal%}
+	{%endifequal%}
+{%endif%}
 </TD>
 {% endfor %}
 </TABLE>
@@ -88,11 +112,12 @@
 {% if r_visits %}
 <DIV STYLE="font-size: 1.2em;">Inactive({{num_inactive}}):</DIV>
 <TABLE>
-<TR><TH>Finished</TH><TH>Patient Id</TH><TH>Status</TH><TH>Finished By</TH><TH>Meds</TH><TH>Actions</TH></TR>
+<TR><TH>Finished</TH><TH>Patient Id</TH>{% ifequal filter_visit_type None %}<TH>Type</TH>{%endifequal%}<TH>Status</TH><TH>Finished By</TH><TH>Meds</TH><TH>Actions</TH></TR>
 {% for v in r_visits %}
 <TR>
 <TD>{{v.finishedDateTime|date:"SHORT_DATETIME_FORMAT"}}</TD>
 <TD><A HREF=/patient/{{v.patient.id}}/>{{ v.patient }}</A></TD>
+{% ifequal filter_visit_type None %}<TD>{{v.displayType}}</TD>{%endifequal%}
 	{% ifequal v.status "MISS" %}
 		<TD STYLE='background-color:#FF5555;'>
 	{% else %} {% ifequal v.status "RESO" %}

@@ -134,9 +134,15 @@ class Visit(models.Model):
         ("RESO", "Resolved"),
         ("MISS", "Missed"),
     )
+    VISIT_TYPE_CHOICES = (
+        ("OUT", "Outpatient"),
+        ("IN", "Inpatient"),
+        ("MAT", "Maternity"),
+    )
     patient = models.ForeignKey(Patient)
     scheduledDate = models.DateField("Date scheduled")
     scheduledBy = models.ForeignKey(User, related_name="visit_scheduled_by")
+    type = models.CharField(max_length=3, choices=VISIT_TYPE_CHOICES, default="OUT")
     status = models.CharField(
         max_length=4, choices=VISIT_STATUS_CHOICES, default="SCHE"
     )
@@ -161,6 +167,12 @@ class Visit(models.Model):
 
     def __unicode__(self):
         return "Visit %d: %s %s" % (self.id, self.patient, self.scheduledDate)
+
+    def _get_displayType(self):
+        for code, displayType in self.VISIT_TYPE_CHOICES:
+            if code == self.type:
+                return displayType
+        return ""
 
     def _get_displayStatus(self):
         for code, displayStatus in self.VISIT_STATUS_CHOICES:
@@ -195,6 +207,7 @@ class Visit(models.Model):
         meds = Med.objects.filter(visit=self)
         return len(meds)
 
+    displayType = property(_get_displayType)
     displayStatus = property(_get_displayStatus)
     displayReason = property(_get_displayReason)
     is_claimed = property(_is_claimed)
@@ -401,6 +414,18 @@ class Visit(models.Model):
                 self.claimedBy.last_name,
             )
         return out_txt
+
+    def can_modify_visit_type(self):
+        """
+        limit situations where visit type can change
+
+        during first day, while claimed, any type shift okay
+
+        during subsequent days none is
+        """
+
+        if self.is_claimed and self.seenDateTime.date() == datetime.date.today():
+            return True
 
 
 class SymptomType(models.Model):
